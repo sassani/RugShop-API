@@ -137,8 +137,9 @@ include 'categories.php';
 
 // Test Area ...
     $app->get('/ardook/info', function (Request $request, Response $response) {
-    // include(realpath(__DIR__ . '/../..').'/info.php');
-})->add($checkApi);
+    include(realpath(__DIR__ . '/../..').'/info.php');
+});
+// })->add($checkApi);
 
 $app->post('/test/{e}', function (Request $request, Response $response) {
     try{
