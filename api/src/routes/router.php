@@ -19,7 +19,7 @@ include 'categories.php';
         ->withHeader('Access-Control-Allow-Origin' , '*')// for enable the CORS
         ->withHeader('Access-Control-Allow-Headers', 'X-Http-Method-Override,apikey,Accept,Content-Type,Content-Length,origin, fireuid,  requesttoken, X-Requested-With,    Client-Security-Token, Accept-Encoding, enctype')// add Content-Type, Accept, Origin, Authorization and apikey as a valid header
         ->withHeader('Content-Type' , 'application/json')
-        ->withHeader('Access-Control-Allow-Methods', 'PATCH,PUT,GET,POST,OPTIONS');
+        ->withHeader('Access-Control-Allow-Methods', 'PATCH,PUT,GET,POST,OPTIONS,DELETE');
     });
 
     $checkApi = function ($request, $response, $next)
@@ -43,12 +43,23 @@ include 'categories.php';
 
 
 // Users
-    $app->post('/users/getaccess', function (Request $request, Response $response) {
+    $app->get('/users/getaccess', function (Request $request, Response $response) {
         try{
         $reqToken = $request->getHeader('requesttoken')[0];
         $user = new User();
         $user = $user->getUser($reqToken);
-        // $user = 'test';
+        return $user;
+        } catch (Throwable $err) {
+            return json_encode($err);
+        }
+    // });
+    })->add($checkApi);
+
+    $app->get('/users/getaccess/token', function (Request $request, Response $response) {
+        try{
+        $reqToken = $request->getHeader('requesttoken')[0];
+        $user = new User();
+        $user = $user->getUser($reqToken);
         return $user;
         } catch (Throwable $err) {
             return json_encode($err);
@@ -57,56 +68,55 @@ include 'categories.php';
     })->add($checkApi);
 
 
-
 // Items...
-    $app->post('/items/get/{storeId}', function (Request $request, Response $response) {
+    $app->get('/stores/{storeId}/items', function (Request $request, Response $response) {
         $item = new ItemService;
         $storId = $request->getAttribute('storeId');
-        // print_r($storId);
         return $item->getItems($storId,0);
     })->add($checkApi);
     
-    $app->post('/items/get/0/{itemId}', function (Request $request, Response $response) {
+    $app->get('/stores/{storeId}/items/{itemId}', function (Request $request, Response $response) {
         $item = new ItemService;
         $itemId = $request->getAttribute('itemId');
+        print_r($itemId);
         return $item->getItems(0,$itemId);
     })->add($checkApi);
     
-    $app->post('/items/add/{storeId}', function (Request $request, Response $response) {
+    $app->post('/stores/{storeId}/items', function (Request $request, Response $response) {
         $fireuid = $request->getHeader('fireuid')[0];
         $storeId = $request->getAttribute('storeId');
         $body = $request->getParsedBody();
         return ItemService::addItem($fireuid, $body,$storeId);        
     })->add($checkApi);
     
-    $app->post('/items/edit/{itemId}', function (Request $request, Response $response) {
+    $app->patch('/stores/{storeId}/items/{itemId}', function (Request $request, Response $response) {
         $fireuid = $request->getHeader('fireuid')[0];
         $itemId = $request->getAttribute('itemId');
         $body = $request->getParsedBody();
         return ItemService::editItem($fireuid, $body,$itemId);
     })->add($checkApi);
 
-    $app->post('/items/del/{itemId}', function (Request $request, Response $response) {
+    $app->delete('/stores/{storeId}/items/{itemId}', function (Request $request, Response $response) {
         $fireuid = $request->getHeader('fireuid')[0];
         $itemId = $request->getAttribute('itemId');
         return ItemService::removeItem($fireuid,$itemId);
     })->add($checkApi);
 
 // Images...
-    $app->post('/image/get/{itemId}', function (Request $request, Response $response) {
+    $app->get('/stores/{storeId}/items/{itemId}/images', function (Request $request, Response $response) {
         $itemId = $request->getAttribute('itemId');
         // var_dump($itemId);
         return json_encode (ImageService::getImages($itemId), JSON_PRETTY_PRINT | JSON_NUMERIC_CHECK|JSON_UNESCAPED_UNICODE);
     })->add($checkApi);
 
-    $app->post('/image/add/{itemId}', function (Request $request, Response $response) {
+    $app->post('/stores/{storeId}/items/{itemId}/images', function (Request $request, Response $response) {
         $reqToken = $request->getHeader('fireuid')[0];
         $itemId = $request->getAttribute('itemId');
         $file = $_FILES['imagefile'];
         return ImageService::addImages($reqToken,$itemId,$file);
     })->add($checkApi);
 
-    $app->post('/image/del/{imageId}', function (Request $request, Response $response) {
+    $app->delete('/stores/{storeId}/items/{itemId}/images/{imageId}', function (Request $request, Response $response) {
         $reqToken = $request->getHeader('fireuid')[0];
         $imageId = $request->getAttribute('imageId');
         return ImageService::deleteImage($reqToken,$imageId);
@@ -121,34 +131,37 @@ include 'categories.php';
         echo "<pre>RugShop API by\nArdavan Sassani\na.sassani@gmail.com\n</pre>";
     }
 
-
-
-
-
-
-
-
-
 // Categories
-    $app->post('/categories/get', function (Request $request, Response $response) {
+    $app->get('/categories', function (Request $request, Response $response) {
         return Categories::getCatAll();
     })->add($checkApi);
 
 
 // Test Area ...
     $app->get('/ardook/info', function (Request $request, Response $response) {
-    include(realpath(__DIR__ . '/../..').'/info.php');
+    print_r(__DIR__ );
+    // include(realpath(__DIR__ . '/../..').'/info.php');
 });
 // })->add($checkApi);
 
-$app->post('/test/{e}', function (Request $request, Response $response) {
-    try{
+$app->get('/test/{e}', function (Request $request, Response $response) {
+    return Categories::getCatAll();
+    // try{
+    //     $mySql = DB::mySql();
+    //     $query = "call ardavans_rugshop.getUsers(1);";
 
-        var_dump($_ENV);
-        }
-    catch(Throwable $err){
-        print_r($err);
-        }
-    })->add($checkApi);
+    //     if ($sqlResult = $mySql->query($query)) {
+    //         // var_dump($sqlResult);
+    //         foreach($sqlResult as $element){
+    //             print_r($element['fireuid']);
+    //         }
+    //         }
+    //     // var_dump();
+    //     }
+    // catch(Throwable $err){
+    //     print_r($err);
+    //     }
+    });
+    // })->add($checkApi);
 
     $app->run();

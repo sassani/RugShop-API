@@ -20,10 +20,20 @@ class User
 
     public function getUser($_token)
     {
-        $requesttoken = $this->checkToken($_token);
-        $requesttoken = json_decode($requesttoken,true);
-        $fireUserId = $requesttoken['user_id'];
-        return $this->getUserFromDb($fireUserId,$requesttoken);
+        // print_r("so far so good");
+        // if (1 === 1) {
+            $requesttoken = $this->checkToken($_token);
+        if ($requesttoken != false) {
+            $requesttoken = json_decode($requesttoken,true);
+            $fireUserId = $requesttoken['user_id'];
+            $fireUserId = $requesttoken['user_id'];
+            // return "ok";
+            return $this->getUserFromDb($fireUserId,$requesttoken);
+        }else {
+            print_r("<pre>". "token is invalid" ."</pre>");
+            return false;
+        }
+
     }
 
     private function getUserFromDb($fireUserId, $requesttoken=false)
@@ -66,7 +76,8 @@ class User
             }
            $user->permissions =  $this->getUserPermissions($user);
            $user->stores = $this->getStores($user);
-            return json_encode($user, JSON_PRETTY_PRINT | JSON_NUMERIC_CHECK | JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);   
+            return json_encode($user);   
+            // return json_encode($user, JSON_PRETTY_PRINT | JSON_NUMERIC_CHECK | JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);   
         } catch (Throwable $err) {
             echo $err;
             return json_encode($err);
@@ -136,7 +147,7 @@ class User
         $mySql = DB::mySql();
         $query = "CALL `getStores`(" .$_user->id. ");";
         if ($result = $mySql->query($query)) {
-            $data = $result->fetchAll();
+            $data = $result->fetchAll(PDO::FETCH_ASSOC);
             return $data;
         }
     }
