@@ -48,7 +48,7 @@
                         return json_encode ($items, JSON_PRETTY_PRINT | JSON_NUMERIC_CHECK|JSON_UNESCAPED_UNICODE);
                     }else{
                         $result['code']=500;
-                        $result['message'] = 'Item deletion has failed!';
+                        $result['message'] = 'Call getItems has been failed';
                         return json_encode($result);
                     }
                     }catch(Throwable $err)
@@ -133,12 +133,13 @@
                     $query = "CALL `addEditItem`(" .$_itemId.",".$itemInfo.");";
                         if($sqlResult = $mySql->query($query)){
                             $sqlResult = $sqlResult->fetchAll();
-                            $result['code']=200;
-                            $result['message'] = 'You have been edited an item into this store';
+                            $result['code']=201;
+                            $result['message'] = 'You have been edited an item';
                             $result['currentId'] = $sqlResult[0]['lastId'];
+                            $result['updated'] = $_item;
                         }else{
                             $result['code']=500;
-                            $result['message'] = 'Item creation has been failed!';
+                            $result['message'] = 'Operation has been failed!';
                         }
                     }else{
                         $result['code']=403;

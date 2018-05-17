@@ -2,6 +2,7 @@
 
     class ImageService
     {
+        private static $targetdir = "images/items/";
         
         public static function getImages($_itemId)
         {
@@ -30,25 +31,25 @@
                 {
                     $itemStoreId = $itemInfo["storeId"];
                     // $itemStoreId = json_decode( ItemService::getItems(0,$_itemId))[0]->storeId;
-                    $targetdir = "images/items/";
                     $fileName = $_imageFile['name'][0];
                     $fileLocalTemp = $_imageFile['tmp_name'][0];
                     $fileContents = file_get_contents($fileLocalTemp);
                     $ext = pathinfo($fileName, PATHINFO_EXTENSION);
                     $targetName = $itemStoreId."_".$_itemId."_".time()."_".hash("sha256",$fileLocalTemp).".".$ext;
-                    $targetfile = $targetdir.$targetName;
+                    $targetfile = ImageService::$targetdir.$targetName;
                     if(FileService::uploadFile($targetfile,$fileLocalTemp))
                     {
-                        $imageUrl = 'https://ardavansassani.net/apimat/'.$targetfile;
+                        $imageUrl = FileService::$remotDirAccess.$targetfile;
                         // $imageUrl = dirname(__DIR__, 2)."/resources/".$targetfile;
                         // echo $imageUrl;
                         // $bucketName = getenv("GOOGLE_BUCKET_NAME");
                         // $imageUrl = 'https://storage.googleapis.com/'.$bucketName."/".$targetfile;
-                        if(ImageService::addImageUrl($_itemId,$imageUrl))
+                        if($sqlResult = ImageService::addImageUrl($_itemId,$imageUrl))
                         {
                             $result['code']=200;
                             $result['message'] = 'picture has been added successfully '.$_imageFile;
-                            $result['file'] = json_encode($_imageFile);
+                            $result['file'] = $_imageFile;
+                            $result['currentId'] = $sqlResult;
                         }else
                         {
                             $result['code']=500;
@@ -65,7 +66,7 @@
                     $result['code']=403;
                     $result['message'] = 'You do not have permision to add/edit/delete items in this store.';
                 }
-            return json_encode($result);
+            return json_encode($result, JSON_PRETTY_PRINT | JSON_NUMERIC_CHECK|JSON_UNESCAPED_UNICODE);
             }catch (Throwable $err) {
                 $result['code']=501;
                 $result['message'] = 'Something is wrong in the server!';
@@ -80,12 +81,11 @@
             $_imageUrl = str_replace("\\","/",$_imageUrl);
             $query = "CALL `addImage`(" .$_itemId.",'".$_imageUrl. "');";
             try{
-                if($mySql->query($query))
-                {
-
-                    return true;
+                if($sqlResult = $mySql->query($query)){
+                    $sqlResult = $sqlResult->fetchAll();
+                    return $sqlResult[0]['lastId'];
                 }else{
-                    echo "data bad";
+                    return false;
                 }
 
             } catch (Throwable $err) {
@@ -102,16 +102,15 @@
             try{
                 foreach($_images AS $image){
                     $targetName = basename($image->url);
-                    $targetdir = "images/items/";
-                    $targetfile = $targetdir.$targetName;
+                    $targetfile = ImageService::$targetdir.$targetName;
                     if(FileService::removeFile($targetfile)){
                         if(ImageService::deleteImageUrl($image->id)){
                             $result = true;
                         }else{
-                            $result = false;
+                            return false;
                         }
                     }else{
-                        $result = false;
+                        return false;
                     }
                 }
                 return $result;
@@ -126,8 +125,7 @@
             try{
             $imageInfo = ImageService:: getImageInfo($_imageId);
             $targetName = basename($imageInfo["imageUrl"]);
-            $targetdir = "images/items/";
-            $targetfile = $targetdir.$targetName;
+            $targetfile = ImageService::$targetdir.$targetName;
             $user = new User();
                 if($user->checkOwnership($_reqToken,$imageInfo)){
                     if(FileService::removeFile($targetfile)){
