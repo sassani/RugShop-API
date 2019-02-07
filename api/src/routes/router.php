@@ -149,12 +149,12 @@ include 'categories.php';
 });
 // })->add($checkApi);
 
-$app->get('/techclasstest', function (Request $req, Response $res){
+$app->get('/api/oauth2/external/callback', function (Request $req, Response $res){
 
     $urlParams = http_build_query($_REQUEST);
     print_r($urlParams);
 
-    header("Location: https://localhost:44398/api/extoauth2/callback?" . $urlParams);
+    header("Location: https://localhost:59833/api/extoauth2/callback?" . $urlParams);
     // var_dump($req);
 });
 
