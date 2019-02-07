@@ -26,7 +26,6 @@ class User
         if ($requesttoken != false) {
             $requesttoken = json_decode($requesttoken,true);
             $fireUserId = $requesttoken['user_id'];
-            $fireUserId = $requesttoken['user_id'];
             // return "ok";
             return $this->getUserFromDb($fireUserId,$requesttoken);
         }else {

@@ -27,7 +27,7 @@ include 'categories.php';
         $apikey = $request->getHeader('apikey')[0];
         $origin ="";
         if(isset($_SERVER["HTTP_ORIGIN"]))$origin = $_SERVER["HTTP_ORIGIN"];
-            if($apikey == 'AIzaSyBiCBS_ijXuYfiw2xIgL_OuFPTkegWrk3w' || $origin =="https://rugpersia.com"){
+            if($apikey == getenv('App_ApiKey') || $origin =="https://rugpersia.com"){
                 $response = $next($request, $response);
             }else{
                 $data = array('errors' => 
@@ -67,6 +67,8 @@ include 'categories.php';
     // });
     })->add($checkApi);
 
+//
+
 
 // Items...
     $app->get('/stores/{storeId}/items', function (Request $request, Response $response) {
@@ -78,8 +80,9 @@ include 'categories.php';
     $app->get('/stores/{storeId}/items/{itemId}', function (Request $request, Response $response) {
         $item = new ItemService;
         $itemId = $request->getAttribute('itemId');
+        $storeId = $request->getAttribute('storeId');
         print_r($itemId);
-        return $item->getItems(0,$itemId);
+        return $item->getItems($storeId,$itemId);
     })->add($checkApi);
     
     $app->post('/stores/{storeId}/items', function (Request $request, Response $response) {
@@ -139,10 +142,26 @@ include 'categories.php';
 
 // Test Area ...
     $app->get('/ardook/info', function (Request $request, Response $response) {
-    print_r(__DIR__ );
+    //print_r(__DIR__ );
+    // var_dump($request);
     // include(realpath(__DIR__ . '/../..').'/info.php');
+    print_r ($request->parse_url);
 });
 // })->add($checkApi);
+
+$app->get('/api/oauth2/external/callback', function (Request $req, Response $res){
+
+    $urlParams = http_build_query($_REQUEST);
+    print_r($urlParams);
+
+    header("Location: https://localhost:59833/api/extoauth2/callback?" . $urlParams);
+    // var_dump($req);
+});
+
+$app->get('/techclasstest/privacyPolicyURL', function (Request $req, Response $res){
+
+    print_r("This is our /privacyPolicyURL");
+});
 
 $app->get('/test/{e}', function (Request $request, Response $response) {
     return Categories::getCatAll();
